@@ -17,7 +17,11 @@ const int motorDuration = 5000; //in milliseconds
 const int trialDuration = 30000; //max trial length in milliseconds
 const int itiDuration = 5000; //time between trials in milliseconds
 
+
+
 //trial variables 
+unsigned long currentMillis = millis();
+int correctCue = rand() % 2 + 1; //1 is light, 2 is sound
 int trialNo = 1;
 int currStim;
 int wallIRval = 0; //over 600au is closest distance to sensor
@@ -49,13 +53,12 @@ void setup() {
 }
 
 void onLED(int ledPin, int duration) {
-
   unsigned long prevMillis = millis();
   unsigned long stimMillis = prevMillis + duration;
 
   while (prevMillis<stimMillis){
     digitalWrite(ledPin, HIGH);
-    unsigned long currentMillis = millis();
+    currentMillis = millis();
     prevMillis = currentMillis;
     }
   
@@ -68,7 +71,7 @@ void onMotor(int motorPin, int speed){
 
   while (prevMillis<stimMillis){
     analogWrite(motorPin, speed);
-    unsigned long currentMillis = millis();
+    currentMillis = millis();
     prevMillis = currentMillis;
     }
   
@@ -77,7 +80,6 @@ void onMotor(int motorPin, int speed){
 
 
 void playStimulus(int stim, int duration) {
-
   if (stim == 0) {
     digitalWrite(2, LOW);
     digitalWrite(3, LOW);
@@ -108,11 +110,7 @@ void playStimulus(int stim, int duration) {
 }
 
 
-
-
-
-
-int mouseChoose(){ //1 is left, 2 is right
+int mouseChoose(){ //1 is left, 2 is right, 0 is omit
   unsigned long prevMillis = millis();
   unsigned long trialMillis = prevMillis + trialDuration;
   
@@ -122,7 +120,7 @@ int mouseChoose(){ //1 is left, 2 is right
       if (lSensorState == LOW) {     
         // turn LED on:
         digitalWrite(LEDpin, HIGH);        
-        Serial.print("Mouse chose LEFT "); 
+        Serial.print("Mouse chose LEFT\t\t\t\t\t"); 
         unsigned long choiceMillis = millis();
         Serial.println(choiceMillis);
         digitalWrite(LEDpin, LOW); 
@@ -131,7 +129,7 @@ int mouseChoose(){ //1 is left, 2 is right
       if (rSensorState == LOW) {     
         // turn LED on:
         digitalWrite(LEDpin, HIGH);        
-        Serial.print("Mouse chose RIGHT " ); 
+        Serial.print("Mouse chose RIGHT\t\t\t\t\t" ); 
         unsigned long choiceMillis = millis();
         Serial.println(choiceMillis);
         digitalWrite(LEDpin, LOW); 
@@ -139,15 +137,81 @@ int mouseChoose(){ //1 is left, 2 is right
         } 
     // if exceeded trial time
     digitalWrite(LEDpin, LOW);
-    unsigned long currentMillis = millis();
+    currentMillis = millis();
     prevMillis = currentMillis;   
        }  
-    Serial.print("Mouse OMITTED trial ");
+    Serial.print("Mouse OMITTED trial\t\t\t\t\t");
     unsigned long omittedMillis = millis();
     Serial.println(omittedMillis);
-    return 0;
-          
+    return 0;       
 }
+
+boolean choiceEval(int correctCue, int currentStim, int choice){
+  if (correctCue == 1){
+    if(currentStim ==1 || currentStim ==2){
+      if (choice == 1){    
+        Serial.print("Mouse made CORRECT choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return true;      
+      }
+      else if(choice ==2){
+        Serial.print("Mouse made WRONG choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return false;  
+      }
+    }
+    
+    if(currentStim == 3 || currentStim == 4){
+      if (choice == 2){    
+        Serial.print("Mouse made CORRECT choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return true;      
+      }
+      else if(choice ==1){
+        Serial.print("Mouse made WRONG choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return false;  
+      }
+    }
+  }
+
+  if (correctCue == 2){
+    if(currentStim ==1 || currentStim ==3){
+      if (choice == 1){    
+        Serial.print("Mouse made CORRECT choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return true;      
+      }
+      else if(choice ==2){
+        Serial.print("Mouse made WRONG choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return false;  
+      }
+    }
+    
+    if(currentStim == 2 || currentStim == 4){
+      if (choice == 2){    
+        Serial.print("Mouse made CORRECT choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return true;      
+      }
+      else if(choice ==1){
+        Serial.print("Mouse made WRONG choice \t\t\t\t\t");
+        currentMillis = millis();
+        Serial.println(currentMillis);
+        return false;  
+      }
+    }
+  }
+}
+  
 
 void wallUp(){
   wallIRval = analogRead(sensorWallIR);
@@ -155,7 +219,7 @@ void wallUp(){
     wallIRval = analogRead(sensorWallIR);  
   }
   digitalWrite(LEDpin, HIGH);
-  Serial.print("Wall moving up ");
+  Serial.print("Wall moving up\t\t\t\t\t");
   unsigned long wallUpMillis = millis();
   Serial.println(wallUpMillis);
   onMotor(motorPin, 200); 
@@ -168,7 +232,7 @@ void itiDelay(){
   unsigned long itiMillis = prevMillis + itiDuration;
   
   while (prevMillis<itiMillis){
-    unsigned long currentMillis = millis();
+    currentMillis = millis();
     prevMillis = currentMillis; 
   }
 }
@@ -177,53 +241,68 @@ void itiDelay(){
  
 void loop() {
   // put your main code here, to run repeatedly:
-
-
-String trialString = "START TRIAL ";
-String dispCurrTrial = trialString + trialNo + " " ;
-Serial.print(dispCurrTrial);
-unsigned long currentMillis = millis();
-Serial.println(currentMillis);
-currStim = rand() % 4 + 1;
-String dispStim = "Current stimulus is: ";
-String dispCurrStim = dispStim + currStim ;
-Serial.println(dispCurrStim);
-Serial.print("Play pre-door stim ");
-currentMillis = millis();
-Serial.println(currentMillis);
-playStimulus(currStim, preDoorStimDur);
-
-Serial.print("Wall moving down "); 
-currentMillis = millis();
-Serial.println(currentMillis);
-onMotor(motorPin, 200);
-
-
-Serial.print("Replay post-door stim ");
-currentMillis = millis();
-Serial.println(currentMillis);
-playStimulus(currStim, postDoorStimDur);
-Serial.println("Waiting for mouse to choose...");
-int choice = mouseChoose();
-
-
-Serial.print("Dispensing reward ");
-currentMillis = millis();
-Serial.println(currentMillis);
-//filler for rewardMouse function
-
-Serial.println("Waiting for mouse to reset trial...");
-
-wallUp();
-Serial.print("Wall closed ");
-currentMillis = millis();
-Serial.println(currentMillis);
-
-trialNo = trialNo + 1;
-Serial.println("---------"); 
-Serial.println("Between trial delay...");
-itiDelay();
-Serial.println("---------"); 
+  
+  String trialString = "START TRIAL: ";
+  String dispCurrTrial = trialString + trialNo;
+  Serial.print(dispCurrTrial);
+  Serial.print("\t\t\t\t\t");
+  currentMillis = millis();
+  Serial.println(currentMillis);
+  
+  Serial.print("Correct cue: ");
+  if(correctCue == 1){
+    Serial.print("LIGHT ");
+  }
+  if(correctCue == 2){
+    Serial.print("SOUND ");
+  }
+  
+  Serial.println(correctCue);
+  
+  currStim = rand() % 4 + 1;
+  String dispStim = "Current stimulus: ";
+  String dispCurrStim = dispStim + currStim ;
+  Serial.println(dispCurrStim);
+  Serial.print("Play pre-door stim\t\t\t\t\t");
+  currentMillis = millis();
+  Serial.println(currentMillis);
+  playStimulus(currStim, preDoorStimDur);
+  
+  Serial.print("Wall moving down\t\t\t\t\t"); 
+  currentMillis = millis();
+  Serial.println(currentMillis);
+  onMotor(motorPin, 200);
+  
+  
+  Serial.print("Replay post-door stim\t\t\t\t\t");
+  currentMillis = millis();
+  Serial.println(currentMillis);
+  playStimulus(currStim, postDoorStimDur);
+  Serial.println("Waiting for mouse to choose...");
+  int choice = mouseChoose();
+  
+  boolean outcome = choiceEval(correctCue, currStim, choice);
+  
+  if(outcome == true){
+    Serial.print("Dispensing reward\t\t\t\t\t");
+    currentMillis = millis();
+    Serial.println(currentMillis);
+    //filler for rewardMouse function
+  }
+  
+  
+  Serial.println("Waiting for mouse to reset trial...");
+  
+  wallUp();
+  Serial.print("Wall closed\t\t\t\t\t");
+  currentMillis = millis();
+  Serial.println(currentMillis);
+  
+  trialNo = trialNo + 1;
+  Serial.println("---------"); 
+  Serial.println("Between trial delay...");
+  itiDelay();
+  Serial.println("---------"); 
 
 
  
