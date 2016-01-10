@@ -1,4 +1,5 @@
 
+//pin assignments
 const int lLEDpin = 2;
 const int rLEDpin = 3;
 const int lSpeakerPin = 4;
@@ -7,14 +8,18 @@ const int LEDpin = 6; //replace with "door"
 const int lSensorPin = 7; 
 const int rSensorPin = 8;
 const int motorPin = 9;
-const int time_stimDelays = 500;
 const int sensorWallIR = A0;
-const long ledInterval = 250;           // in milliseconds
-const int stimDuration = 2000; //in milliseconds
-const int motorDuration = 5000; //in milliseconds
- 
-int stimArray[4] = {1, 2, 3, 4};
 
+//experimental conditions. change as necessary
+const int preDoorStimDur = 2000; //in milliseconds
+const int postDoorStimDur = 2000; //in milliseconds
+const int motorDuration = 5000; //in milliseconds
+const int trialDuration = 30000; //max trial length in milliseconds
+const int itiDuration = 5000; //time between trials in milliseconds
+
+//trial variables 
+int trialNo = 1;
+int currStim;
 int wallIRval = 0; //over 600au is closest distance to sensor
 /* stimulus 0: turn off all stimulus
 stimulus 1: left LED + left speaker
@@ -40,14 +45,13 @@ void setup() {
   digitalWrite(lSensorPin, HIGH); // turn on the pullup
   digitalWrite(rSensorPin, HIGH); // turn on the pullup
   Serial.begin(9600);
-  Serial.println("Enter stimulus # 1 to 4 or '0' for no stimulus");
   
 }
 
-void onLED(int ledPin) {
+void onLED(int ledPin, int duration) {
 
   unsigned long prevMillis = millis();
-  unsigned long stimMillis = prevMillis + stimDuration;
+  unsigned long stimMillis = prevMillis + duration;
 
   while (prevMillis<stimMillis){
     digitalWrite(ledPin, HIGH);
@@ -72,7 +76,7 @@ void onMotor(int motorPin, int speed){
 }
 
 
-void playStimulus(int stim) {
+void playStimulus(int stim, int duration) {
 
   if (stim == 0) {
     digitalWrite(2, LOW);
@@ -82,97 +86,146 @@ void playStimulus(int stim) {
   }
   
   if (stim == 1) {
-    tone(lSpeakerPin, 3000, stimDuration);
-    onLED(lLEDpin);
+    tone(lSpeakerPin, 3000, duration);
+    onLED(lLEDpin, duration);
     }
     
   
   if (stim == 2) {  
-    tone(rSpeakerPin, 3000, stimDuration);  
-    onLED(lLEDpin);
+    tone(rSpeakerPin, 3000, duration);  
+    onLED(lLEDpin, duration);
   }
 
   if (stim == 3) {   
-    tone(lSpeakerPin, 3000, stimDuration);
-    onLED(rLEDpin); 
+    tone(lSpeakerPin, 3000, duration);
+    onLED(rLEDpin, duration); 
   }
   
    if (stim == 4) {
-    tone(rSpeakerPin, 3000, stimDuration);
-     onLED(rLEDpin); 
+    tone(rSpeakerPin, 3000, duration);
+     onLED(rLEDpin, duration); 
    }
 }
+
+
+
+
+
+
+int mouseChoose(){ //1 is left, 2 is right
+  unsigned long prevMillis = millis();
+  unsigned long trialMillis = prevMillis + trialDuration;
   
+  while (prevMillis<trialMillis){
+    lSensorState = digitalRead(lSensorPin);
+    rSensorState = digitalRead(rSensorPin);
+      if (lSensorState == LOW) {     
+        // turn LED on:
+        digitalWrite(LEDpin, HIGH);        
+        Serial.print("Mouse chose LEFT "); 
+        unsigned long choiceMillis = millis();
+        Serial.println(choiceMillis);
+        digitalWrite(LEDpin, LOW); 
+        return 1;      
+        }  
+      if (rSensorState == LOW) {     
+        // turn LED on:
+        digitalWrite(LEDpin, HIGH);        
+        Serial.print("Mouse chose RIGHT " ); 
+        unsigned long choiceMillis = millis();
+        Serial.println(choiceMillis);
+        digitalWrite(LEDpin, LOW); 
+        return 2;      
+        } 
+    // if exceeded trial time
+    digitalWrite(LEDpin, LOW);
+    unsigned long currentMillis = millis();
+    prevMillis = currentMillis;   
+       }  
+    Serial.print("Mouse OMITTED trial ");
+    unsigned long omittedMillis = millis();
+    Serial.println(omittedMillis);
+    return 0;
+          
+}
+
+void wallUp(){
+  wallIRval = analogRead(sensorWallIR);
+  while (wallIRval < 500){
+    wallIRval = analogRead(sensorWallIR);  
+  }
+  digitalWrite(LEDpin, HIGH);
+  Serial.print("Wall moving up ");
+  unsigned long wallUpMillis = millis();
+  Serial.println(wallUpMillis);
+  onMotor(motorPin, 200); 
+  digitalWrite(LEDpin, LOW);
+  
+}
+
+void itiDelay(){
+  unsigned long prevMillis = millis();
+  unsigned long itiMillis = prevMillis + itiDuration;
+  
+  while (prevMillis<itiMillis){
+    unsigned long currentMillis = millis();
+    prevMillis = currentMillis; 
+  }
+}
+
+
  
 void loop() {
   // put your main code here, to run repeatedly:
-asdf
 
 
-// code for left and right poke sensors
-lSensorState = digitalRead(lSensorPin);
-  if (lSensorState == LOW) {     
-    // turn LED on:
-    digitalWrite(LEDpin, HIGH);  
-  } 
-  else {
-    // turn LED off:
-    digitalWrite(LEDpin, LOW); 
-  }
-  
-  if (lSensorState && !last_lSensorState) {
-    Serial.println("left sensor UNBROKEN");
-  } 
-  if (!lSensorState && last_lSensorState) {
-    Serial.println("left sensor BROKEN");
-  }
-  last_lSensorState = lSensorState;
+String trialString = "START TRIAL ";
+String dispCurrTrial = trialString + trialNo + " " ;
+Serial.print(dispCurrTrial);
+unsigned long currentMillis = millis();
+Serial.println(currentMillis);
+currStim = rand() % 4 + 1;
+String dispStim = "Current stimulus is: ";
+String dispCurrStim = dispStim + currStim ;
+Serial.println(dispCurrStim);
+Serial.print("Play pre-door stim ");
+currentMillis = millis();
+Serial.println(currentMillis);
+playStimulus(currStim, preDoorStimDur);
+
+Serial.print("Wall moving down "); 
+currentMillis = millis();
+Serial.println(currentMillis);
+onMotor(motorPin, 200);
 
 
-rSensorState = digitalRead(rSensorPin);
-  if (rSensorState == LOW) {     
-    // turn LED on:
-    digitalWrite(LEDpin, HIGH);  
-  } 
-  else {
-    // turn LED off:
-    digitalWrite(LEDpin, LOW); 
-  }
-  
-  if (rSensorState && !last_rSensorState) {
-    Serial.println("right sensor UNBROKEN");
-  } 
-  if (!rSensorState && last_rSensorState) {
-    Serial.println("right sensor BROKEN");
-  }
-  last_rSensorState = rSensorState;
-  
+Serial.print("Replay post-door stim ");
+currentMillis = millis();
+Serial.println(currentMillis);
+playStimulus(currStim, postDoorStimDur);
+Serial.println("Waiting for mouse to choose...");
+int choice = mouseChoose();
 
 
- if (Serial.available())
-  {
-    char ch = Serial.read();
-    int tempStim = ch - '0';
-    String dispStim = "Current stimulus is: ";
-    String curStim = dispStim + tempStim;
-    Serial.println(curStim);
-    playStimulus(tempStim);
-    wallIRval = analogRead(sensorWallIR);
-    String dispWallIR = "Distance to IR sensor is: ";
-    String curWallIR = dispWallIR + wallIRval;
-    Serial.println(curWallIR);
-  }  
+Serial.print("Dispensing reward ");
+currentMillis = millis();
+Serial.println(currentMillis);
+//filler for rewardMouse function
 
-  wallIRval = analogRead(sensorWallIR);
-  if (wallIRval > 600){
-    digitalWrite(LEDpin, HIGH);
-    onMotor(motorPin, 200);
-  }
-  else digitalWrite(LEDpin, LOW);
+Serial.println("Waiting for mouse to reset trial...");
+
+wallUp();
+Serial.print("Wall closed ");
+currentMillis = millis();
+Serial.println(currentMillis);
+
+trialNo = trialNo + 1;
+Serial.println("---------"); 
+Serial.println("Between trial delay...");
+itiDelay();
+Serial.println("---------"); 
 
 
-
-  
  
 
 }
