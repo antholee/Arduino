@@ -88,7 +88,7 @@ void setup() {
   //correctCue = cueForBlock[0]; //remove for training
   //memset(trialOutcomes, 9, sizeof(trialOutcomes));
   Serial.begin(9600);
-  Serial.println("This is training WITH punishment");
+  Serial.println("This is conditioning. One cue/trial, incorrect choice is ignored");
   Serial.print("MouseID:\t");
   Serial.println(mouseID); 
   Serial.print("Date:\t");
@@ -526,10 +526,10 @@ void loop() {
   }
 
   if(outcome == 2){
-    Serial.print("Puffing air\t");
+    Serial.print("No punishment");
     currentMillis = millis();
     Serial.println(currentMillis);
-    airPuff();
+    ;
   }
 
   lastStim = currStim;

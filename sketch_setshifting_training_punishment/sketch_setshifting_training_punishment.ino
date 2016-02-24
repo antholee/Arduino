@@ -1,5 +1,5 @@
-char mouseID[] = "12345";
-char date[] = "20160203";
+char mouseID[] = "INSERT MOUSE ID HERE";
+char date[] = "INSERT TODAY'S DATE";
 
 
 
@@ -8,8 +8,8 @@ char date[] = "20160203";
 //stim = [1 2 3 4]
 //stimList = repmat(stim, [1 5])
 //randStimList = stimList(randperm(length(stimList)))
-int stimForTrial[] = {1,1, 3, 4, 2, 4, 2, 3, 3, 2, 4, 3, 1, 2, 2, 3, 4, 1, 1, 4}; //order of stimulus given
-int lastStimTrial = 19; //length(stimForTrial)-1; it should match length of stimForTrial[];
+int stimForTrial[] = {1, 3, 4,3,2,2,1,4}; //order of stimulus given
+int lastStimTrial = 8; //length(stimForTrial)-1; it should match length of stimForTrial[];
 //stim1 is leftLED
 //stim2 is rightLED
 //stim3 is leftSound
@@ -20,10 +20,8 @@ int lastStimTrial = 19; //length(stimForTrial)-1; it should match length of stim
 const int lSpeakerPitch = 7000; //in Hz
 const int rSpeakerPitch = 11000;
 const int stimInterval = 500; //ISI between blinks and pulses; in ms
-const int stimDuration = 30000;
-const int rewardDuration = 200; //time water pump is on in ms
-const int motorDuration = 5000; //in milliseconds
-const int trialDuration = 30000; //max trial length in milliseconds
+unsigned long stimDuration = 60000;
+const int rewardDuration = 350; //time water pump is on in ms
 const int itiDuration = 5000; //time between trials in milliseconds
 const int puffDuration = 1000;
 const int beepDur = 500; //ISI of Beeps, in ms
@@ -88,12 +86,17 @@ void setup() {
   //correctCue = cueForBlock[0]; //remove for training
   //memset(trialOutcomes, 9, sizeof(trialOutcomes));
   Serial.begin(9600);
-  Serial.println("This is training WITH punishment");
-  Serial.print("MouseID:\t");
+  Serial.println("This is training WITH punishment. One cue/trial. Incorrect choice is punished and stimulus is repeated on next trial");
+   Serial.print("MouseID:\t");
   Serial.println(mouseID); 
   Serial.print("Date:\t");
   Serial.println(date);
-   
+  //remove prime event
+//  digitalWrite(lWaterPin, HIGH);
+//  digitalWrite(rWaterPin, HIGH);
+//  delay(250);
+//   digitalWrite(lWaterPin, LOW);
+//  digitalWrite(rWaterPin, LOW);
   delay(10000);
     
 }
@@ -355,8 +358,8 @@ int choiceEval(int currentStim, int choice){
 
 void giveWater(int choice){
 //1 is left, 2 is right
-int currentMillis = millis();
-int stopMillis = currentMillis + rewardDuration;
+unsigned long currentMillis = millis();
+unsigned long stopMillis = currentMillis + rewardDuration;
 
  if(choice == 1){
   while(currentMillis <=stopMillis){
@@ -379,9 +382,6 @@ int stopMillis = currentMillis + rewardDuration;
 void resetTrial(){
   int currState;
   resetState = digitalRead(resetIRpin);
-  unsigned long currMillis = millis();
-  unsigned long timeLimit = currMillis + 600000;
-  
   
   while (resetState == HIGH){
     resetState = digitalRead(resetIRpin);

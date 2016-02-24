@@ -1,15 +1,15 @@
-char mouseID[] = "12345";
-char date[] = "20160203";
+char mouseID[] = "INSERT MOUSE ID HERE";
+char date[] = "INSERT DATE HERE";
 
 
 
 //CUE PARAMETERS. CHANGE FOR EACH MOUSE
 //how stimForTrial was generated in matlab
 //stim = [1 2 3 4]
-//stimList = repmat(stim, [1 5])
+//stimList = repmat(stim, [1 3])
 //randStimList = stimList(randperm(length(stimList)))
-int stimForTrial[] = {1,1, 3, 4, 2, 4, 2, 3, 3, 2, 4, 3, 1, 2, 2, 3, 4, 1, 1, 4}; //order of stimulus given
-int lastStimTrial = 19; //length(stimForTrial)-1; it should match length of stimForTrial[];
+int stimForTrial[] = {4,  1, 4, 2, 2, 3, 3, 4, 1, 3, 1, 2}; //order of stimulus given
+int lastStimTrial = 12; //length(stimForTrial)-1; it should match length of stimForTrial[];
 //stim1 is leftLED
 //stim2 is rightLED
 //stim3 is leftSound
@@ -20,10 +20,8 @@ int lastStimTrial = 19; //length(stimForTrial)-1; it should match length of stim
 const int lSpeakerPitch = 7000; //in Hz
 const int rSpeakerPitch = 11000;
 const int stimInterval = 500; //ISI between blinks and pulses; in ms
-const int stimDuration = 30000;
-const int rewardDuration = 200; //time water pump is on in ms
-const int motorDuration = 5000; //in milliseconds
-const int trialDuration = 30000; //max trial length in milliseconds
+unsigned long stimDuration = 60000; //max trial length in milliseconds
+const int rewardDuration = 350; //time water pump is on in ms
 const int itiDuration = 5000; //time between trials in milliseconds
 const int puffDuration = 1000;
 const int beepDur = 500; //ISI of Beeps, in ms
@@ -68,8 +66,6 @@ int rsState =1 ; //1 is pre-ruleShift; 2 is post-ruleShift
 
 void setup() {
   // put your setup code here, to run once:
-  
-  
   pinMode(lLEDpin, OUTPUT); //left LED
   pinMode(rLEDpin, OUTPUT); //right LED
   pinMode(lSpeakerPin, OUTPUT); //left speaker
@@ -88,13 +84,17 @@ void setup() {
   //correctCue = cueForBlock[0]; //remove for training
   //memset(trialOutcomes, 9, sizeof(trialOutcomes));
   Serial.begin(9600);
-  Serial.println("This is training WITH punishment");
+  Serial.println("This is conditioning. One cue/trial, incorrect choice is ignored");
   Serial.print("MouseID:\t");
   Serial.println(mouseID); 
   Serial.print("Date:\t");
   Serial.println(date);
-   
-  delay(10000);
+  digitalWrite(lWaterPin, HIGH);
+  digitalWrite(rWaterPin, HIGH);
+  delay(250);
+   digitalWrite(lWaterPin, LOW);
+  digitalWrite(rWaterPin, LOW);
+  delay(9750);
     
 }
 
@@ -116,7 +116,7 @@ int playStimulus(int stim) {
     
     while (prevMillis<stimMillis){ 
       lSensorState = digitalRead(lSensorPin);
-      rSensorState = digitalRead(rSensorPin);
+      rSensorState = digitalRead(rSensorPin); 
       if (lSensorState == LOW) {     
         // turn LED on:
         digitalWrite(npLEDpin, HIGH);        
@@ -126,15 +126,16 @@ int playStimulus(int stim) {
         digitalWrite(npLEDpin, LOW); 
         return 1;      
         }  
-      if (rSensorState == LOW) {     
-        // turn LED on:
-        digitalWrite(npLEDpin, HIGH);        
-        Serial.print("Mouse chose RIGHT\t" ); 
-        unsigned long choiceMillis = millis();
-        Serial.println(choiceMillis);
-        digitalWrite(npLEDpin, LOW); 
-        return 2;      
-        } 
+//        //ignore incorrect choice sensor
+//       if (rSensorState == LOW) {     
+//          // turn LED on:
+//          digitalWrite(npLEDpin, HIGH);        
+//          Serial.print("Mouse chose RIGHT\t" ); 
+//          unsigned long choiceMillis = millis();
+//          Serial.println(choiceMillis);
+//          digitalWrite(npLEDpin, LOW); 
+//          //return 2;      
+//          } 
     
       if(stimStartMillis >= stimStopMillis){      
               if (ledState == LOW) {
@@ -165,15 +166,16 @@ int playStimulus(int stim) {
     while (prevMillis<stimMillis){ 
       lSensorState = digitalRead(lSensorPin);
       rSensorState = digitalRead(rSensorPin);
-      if (lSensorState == LOW) {     
-        // turn LED on:
-        digitalWrite(npLEDpin, HIGH);        
-        Serial.print("Mouse chose LEFT\t"); 
-        unsigned long choiceMillis = millis();
-        Serial.println(choiceMillis);
-        digitalWrite(npLEDpin, LOW); 
-        return 1;      
-        }  
+      //ignore sensor
+//      if (lSensorState == LOW) {     
+//       // turn LED on:
+//       digitalWrite(npLEDpin, HIGH);        
+//       Serial.print("Mouse chose LEFT\t"); 
+//       unsigned long choiceMillis = millis();
+//        Serial.println(choiceMillis);
+//       digitalWrite(npLEDpin, LOW); 
+////        return 1;      
+//        }  
       if (rSensorState == LOW) {     
         // turn LED on:
         digitalWrite(npLEDpin, HIGH);        
@@ -225,15 +227,17 @@ int playStimulus(int stim) {
         digitalWrite(npLEDpin, LOW); 
         return 1;      
         }  
-      if (rSensorState == LOW) {     
-        // turn LED on:
-        digitalWrite(npLEDpin, HIGH);        
-        Serial.print("Mouse chose RIGHT\t" ); 
-        unsigned long choiceMillis = millis();
-        Serial.println(choiceMillis);
-        digitalWrite(npLEDpin, LOW); 
-        return 2;      
-        } 
+
+        //ignore sensor
+   //  if (rSensorState == LOW) {     
+////        // turn LED on:
+//       digitalWrite(npLEDpin, HIGH);        
+//       Serial.print("Mouse chose RIGHT\t" ); 
+//       unsigned long choiceMillis = millis();
+//       Serial.println(choiceMillis);
+//       digitalWrite(npLEDpin, LOW); 
+////        return 2;      
+    //    } 
     
       if(stimStartMillis >= stimStopMillis){       
               if (ledState == LOW) {
@@ -266,15 +270,17 @@ int playStimulus(int stim) {
     while (prevMillis<stimMillis){ 
       lSensorState = digitalRead(lSensorPin);
       rSensorState = digitalRead(rSensorPin);
-      if (lSensorState == LOW) {     
-        // turn LED on:
-        digitalWrite(npLEDpin, HIGH);        
-        Serial.print("Mouse chose LEFT\t"); 
-        unsigned long choiceMillis = millis();
-        Serial.println(choiceMillis);
-        digitalWrite(npLEDpin, LOW); 
-        return 1;      
-        }  
+
+      //ignore sensor
+  //   if (lSensorState == LOW) {     
+////        // turn LED on:
+//       digitalWrite(npLEDpin, HIGH);        
+//   Serial.print("Mouse chose LEFT\t"); 
+//     unsigned long choiceMillis = millis();
+//       Serial.println(choiceMillis);
+//       digitalWrite(npLEDpin, LOW); 
+////        return 1;      
+  //      }  
       if (rSensorState == LOW) {     
         // turn LED on:
         digitalWrite(npLEDpin, HIGH);        
@@ -355,8 +361,8 @@ int choiceEval(int currentStim, int choice){
 
 void giveWater(int choice){
 //1 is left, 2 is right
-int currentMillis = millis();
-int stopMillis = currentMillis + rewardDuration;
+unsigned long currentMillis = millis();
+unsigned long stopMillis = currentMillis + rewardDuration;
 
  if(choice == 1){
   while(currentMillis <=stopMillis){
@@ -379,8 +385,6 @@ int stopMillis = currentMillis + rewardDuration;
 void resetTrial(){
   int currState;
   resetState = digitalRead(resetIRpin);
-  unsigned long currMillis = millis();
-  unsigned long timeLimit = currMillis + 600000;
   
   
   while (resetState == HIGH){
@@ -526,10 +530,10 @@ void loop() {
   }
 
   if(outcome == 2){
-    Serial.print("Puffing air\t");
+    Serial.print("No punishment");
     currentMillis = millis();
     Serial.println(currentMillis);
-    airPuff();
+    ;
   }
 
   lastStim = currStim;
